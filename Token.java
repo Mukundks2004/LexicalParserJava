@@ -14,7 +14,6 @@ public class Token {
 				return false;
 			}
 		}
-
 	}
 
 	private TokenType type;
