@@ -1,3 +1,4 @@
+import java.net.HttpRetryException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,6 +61,9 @@ public class LexicalAnalyser {
 						currentState = State.EXPECT_OPERATION;
 					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter))) {
+						result.add(new Token(convertToDouble(buffer)));
+						buffer = new ArrayList<Character>();
+						result.add(new Token(Token.typeOf(currentLetter)));
 						currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
 					}
 					else if (currentLetter == '.') {
@@ -92,6 +96,8 @@ public class LexicalAnalyser {
 					}
 					else if (currentLetter == ' ') {
 						currentState = State.EXPECT_OPERATION;
+						result.add(new Token(convertToDouble(buffer)));
+						buffer = new ArrayList<Character>();
 					}
 					else if (currentLetter == '.') {
 						throw new NumberException();
@@ -153,16 +159,6 @@ public class LexicalAnalyser {
 
 		return result;
 	}
-
-	public static boolean isValidString(String input, String allowableChars) {
-        for (int i = 0; i < input.length(); i++) {
-            char ch = input.charAt(i);
-            if (allowableChars.indexOf(ch) == -1) {
-                return false;
-            }
-        }
-        return true;
-    }
 
 	public static double convertToDouble(List<Character> charList) {
         StringBuilder sb = new StringBuilder();
