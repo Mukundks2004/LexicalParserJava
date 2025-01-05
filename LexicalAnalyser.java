@@ -63,8 +63,7 @@ public class LexicalAnalyser {
 						currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
 					}
 					else if (currentLetter == '.') {
-						currentState = State.FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER;
-						buffer.add(currentLetter);
+						throw new NumberException();
 					}
 					else {
 						throw new NumberException();

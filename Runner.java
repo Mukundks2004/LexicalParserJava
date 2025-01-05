@@ -1,8 +1,8 @@
 public class Runner {
     public static void main(String[] args) {
         try {
-            // System.out.println(LexicalAnalyser.analyse("2 + 6 * 6.690"));
-            System.out.println(LexicalAnalyser.analyse("0."));
+            System.out.println(LexicalAnalyser.analyse("2 + 6 * 10.690"));
+            // System.out.println(LexicalAnalyser.analyse("63.34"));
             // System.out.println(LexicalAnalyser.analyse("0 + 0"));
         }
         catch (NumberException e) {
