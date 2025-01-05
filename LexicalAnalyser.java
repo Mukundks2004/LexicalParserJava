@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.text.html.HTMLDocument.HTMLReader.CharacterAction;
+
 public class LexicalAnalyser {
 
 	final static String OPERATIONS = "+-*/";
@@ -19,8 +21,10 @@ public class LexicalAnalyser {
 	// Note: replace the transition part with an actual transition function that takes two arguments to better emphasize the fsa part of this code
 	public static List<Token> analyse(String input) throws NumberException, ExpressionException {
 		State currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
+		List<Character> buffer = new ArrayList<Character>();
+		List<Token> result = new ArrayList<Token>();
 
-		for (int i = 0; i < input.length(); i++){
+		for (int i = 0; i < input.length(); i++) {
 
 			char currentLetter = input.charAt(i);
 
@@ -30,10 +34,12 @@ public class LexicalAnalyser {
 				case FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER:
 					if (POS_INTS.contains(String.valueOf(currentLetter))) {
 						currentState = State.NON_FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
+						buffer.add(currentLetter);
 					}
 					else if (currentLetter == ' ') {}
 					else if (currentLetter == '0') {
 						currentState = State.CURRENT_NUMBER_IS_ZERO;
+						buffer.add(currentLetter);
 					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter)) || currentLetter == '.') {
 						throw new ExpressionException();
@@ -44,8 +50,12 @@ public class LexicalAnalyser {
 					break;
 
 				case NON_FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER:
-					if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {}
+					if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {
+						buffer.add(currentLetter);
+					}
 					else if (currentLetter == ' ') {
+						result.add(new Token(convertToDouble(buffer)));
+						buffer = new ArrayList<Character>();
 						currentState = State.EXPECT_OPERATION;
 					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter))) {
@@ -53,6 +63,7 @@ public class LexicalAnalyser {
 					}
 					else if (currentLetter == '.') {
 						currentState = State.FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER;
+						buffer.add(currentLetter);
 					}
 					else {
 						throw new NumberException();
@@ -62,6 +73,7 @@ public class LexicalAnalyser {
 				case FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER:
 					if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {
 						currentState = State.NON_FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER;
+						buffer.add(currentLetter);
 					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter)) || currentLetter == ' ' || currentLetter == '.') {
 						throw new NumberException();
@@ -72,7 +84,9 @@ public class LexicalAnalyser {
 					break;
 
 				case NON_FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER:
-					if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {}
+					if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {
+						buffer.add(currentLetter);
+					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter))) {
 						currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
 					}
@@ -93,9 +107,12 @@ public class LexicalAnalyser {
 					}
 					else if (currentLetter == '.') {
 						currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
+						buffer.add(currentLetter);
 					}
 					else if (currentLetter == ' ') {
 						currentState = State.EXPECT_OPERATION;
+						result.add(new Token(convertToDouble(buffer)));
+						buffer = new ArrayList<Character>();
 					}
 					else if (POS_INTS.contains(String.valueOf(currentLetter)) || currentLetter == '0') {
 						throw new NumberException();
@@ -111,6 +128,7 @@ public class LexicalAnalyser {
 					}
 					else if (OPERATIONS.contains(String.valueOf(currentLetter))) {
 						currentState = State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER;
+						result.add(new Token(Token.typeOf(currentLetter)));
 					}
 					else if (currentLetter == ' ') {}
 					else {
@@ -124,17 +142,16 @@ public class LexicalAnalyser {
 
 		}
 
-		List<Token> myList = new ArrayList<Token>();
+		if (currentState == State.FIRST_CHAR_OF_INTEGER_PART_OF_NUMBER) {
+			throw new ExpressionException();
+		}
+		else if (currentState == State.FIRST_CHAR_OF_DECIMAL_PART_OF_NUMBER) {
+			throw new NumberException();
+		}
 
-		Token t1 = new Token(2);
-		Token t2 = new Token(3.14);
-		Token t3 = new Token(Token.TokenType.DIVIDE);
+		result.add(new Token(convertToDouble(buffer)));
 
-		myList.add(t1);
-		myList.add(t2);
-		myList.add(t3);
-
-		return myList;
+		return result;
 	}
 
 	public static boolean isValidString(String input, String allowableChars) {
@@ -145,5 +162,14 @@ public class LexicalAnalyser {
             }
         }
         return true;
+    }
+
+	public static double convertToDouble(List<Character> charList) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : charList) {
+            sb.append(c);
+        }
+
+        return Double.parseDouble(sb.toString());
     }
 }
