@@ -41,8 +41,11 @@ public class LexicalAnalyser {
 						currentState = State.CURRENT_NUMBER_IS_ZERO;
 						buffer.add(currentLetter);
 					}
-					else if (OPERATIONS.contains(String.valueOf(currentLetter)) || currentLetter == '.') {
+					else if (OPERATIONS.contains(String.valueOf(currentLetter))) {
 						throw new ExpressionException();
+					}
+					else if (currentLetter == '.') {
+						throw new NumberException();
 					}
 					else {
 						throw new ExpressionException();
